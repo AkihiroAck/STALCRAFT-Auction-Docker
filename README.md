@@ -102,8 +102,8 @@ docker-compose build --no-cache && docker-compose up -d
 ```
 
 После успешного запуска:
-- Приложение будет доступно по адресу: www.localhost:8000
-- pgAdmin: www.localhost:5050 (логин и пароль указаны в .env)
+- Приложение будет доступно по адресу: [localhost:8000](http://localhost:8000) (список предметов)
+- pgAdmin: [localhost:5050](http://localhost:5050) (логин и пароль указаны в .env)
 
 ### 4. Миграции базы данных и collectstatic
 Миграции и collectstatic выполняются автоматически с помощью `backend\entrypoint_web.sh`
@@ -157,11 +157,11 @@ docker-compose down -v
   - **entrypoint_web.sh** — скрипт запуска веб-приложения (Django + Gunicorn).
   - **requirements.txt** — список зависимостей Python-пакетов.
   - **wait_for_migrations.py** — вспомогательный скрипт, который дожидается применения миграций перед запуском Celery (используется в `entrypoint_celery.sh`).
+- **initdb** — скрипты для первоначальной инициализации базы данных PostgreSQL (дампы, создание схем и таблиц).
 - **docker-compose.yml** — конфигурация для запуска всех сервисов (PostgreSQL, Redis, backend, Celery) через Docker Compose.
 - **.env** — файл с переменными окружения (секреты, ключи, настройки БД и др.).
 
 ---
 
 ## API интеграция
-Приложение интегрируется с игровым проектом STALCRAFT через API. Данные о продажах синхронизируются ежедневно с помощью цикличной задачи Celery. Для настройки API используйте переменные STALCRAFT_CLIENT_ID, STALCRAFT_CLIENT_SECRET в .env.
-
+Приложение интегрируется с игровым проектом STALCRAFT через API. Данные о продажах синхронизируются ежедневно с помощью цикличной задачи Celery. Для настройки API используйте переменные `STALCRAFT_CLIENT_ID`, `STALCRAFT_CLIENT_SECRET` в .env. Без них от функции в Celery `start_get_history` вы получите ошибку - `{'title': 'Unauthorized', 'status': 401, 'details': {}}`

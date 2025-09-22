@@ -65,6 +65,8 @@ def get_history(item, additional: str = 'false', limit: str = '20', offset: str 
 
             if response.status_code != 200:  # Если не успешный статус ответа
                 print(f'ERROR: get_history (response.status_code != 200) {item.name} [{item.item_id}]: {response_json}')
+                time.sleep(5)
+                continue  # Повторить запрос
 
             return response_json
         except requests.exceptions.RequestException as e:
@@ -103,8 +105,6 @@ def start_get_history():
                     
                     if 'total' in lots and lots.get('total') != 0:
                         save_sale_history(item, lots.get('prices'), total_items, count)
-                    
-                    # time.sleep(0.8)  # Задержка между запросами к API (по умолчанию 0.8)
 
                     break
                 except Exception as e:
