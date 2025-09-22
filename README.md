@@ -89,13 +89,13 @@ REDIS_DB=0
 ### 3. Запуск с помощью Docker
 Для запуска всех сервисов выполните:
 ```bash
-docker-compose build --no-cache
-docker-compose up
+docker-compose build --no-cache && docker-compose up
 ```
 
 или
 ```bash
-docker-compose build --no-cache && docker-compose up
+docker-compose build --no-cache
+docker-compose up
 ```
 
 Если нужно запустить на фоне:
