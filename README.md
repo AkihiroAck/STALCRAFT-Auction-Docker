@@ -66,7 +66,7 @@ STALCRAFT_DATABASE_LISTING=https://api.github.com/repos/EXBO-Studio/stalcraft-da
 # PostgreSQL
 POSTGRES_DATABASE_NAME=POSTGRESQL_DATABASE_NAME
 POSTGRES_USERNAME=db_user
-POSTGRES_USER_PASSWORD=db_password
+POSTGRES_PASSWORD=db_password
 POSTGRES_HOST=db
 POSTGRES_PORT=5432
 
@@ -152,12 +152,13 @@ docker-compose down -v
     - **static/** — статические файлы проекта (CSS, JS, изображения).
     - **templates/** — HTML-шаблоны для отображения страниц.
     - **manage.py** — основной скрипт для управления Django (миграции, запуск сервера, команды).
+  - **auction_item.sql** — SQL-файл с начальными данными предметов, используется для первичного наполнения базы при первом запуске.
+  - **auction_salehistory.sql** — SQL-файл с историей продаж предметов, используется для первичного наполнения базы при первом запуске.
   - **Dockerfile** — инструкция сборки Docker-образа для backend.
   - **entrypoint_celery.sh** — скрипт запуска Celery внутри контейнера.
   - **entrypoint_web.sh** — скрипт запуска веб-приложения (Django + Gunicorn).
   - **requirements.txt** — список зависимостей Python-пакетов.
   - **wait_for_migrations.py** — вспомогательный скрипт, который дожидается применения миграций перед запуском Celery (используется в `entrypoint_celery.sh`).
-- **initdb** — скрипты для первоначальной инициализации базы данных PostgreSQL (дампы, создание схем и таблиц).
 - **docker-compose.yml** — конфигурация для запуска всех сервисов (PostgreSQL, Redis, backend, Celery) через Docker Compose.
 - **.env** — файл с переменными окружения (секреты, ключи, настройки БД и др.).
 
