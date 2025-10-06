@@ -6,8 +6,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     entrypoint: /usr/src/app/entrypoint_web.sh
 
   db:
@@ -47,9 +49,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      web:
+        condition: service_started
     entrypoint: /usr/src/app/entrypoint_celery.sh
     command: celery -A scaw worker -l INFO
 
@@ -58,9 +63,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      web:
+        condition: service_started
     entrypoint: /usr/src/app/entrypoint_celery.sh
     command: celery -A scaw beat -l INFO
 
