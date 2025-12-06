@@ -50,10 +50,7 @@ def item_list_view(request):
         }
         return JsonResponse(data)
     
-    return render(request, 'auction/items_list.html', {
-        'items': page_obj,
-        'search_query': search
-    })
+    return render(request, 'auction/items_list.html')
 
 
 def item_detail_view(request, item_id):

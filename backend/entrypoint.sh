@@ -1,6 +1,5 @@
 #!/bin/sh
 cd ./scaw
-
 python manage.py makemigrations
 python manage.py migrate
 
@@ -26,5 +25,19 @@ if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username=username, password=password)
 PY
 
-python manage.py collectstatic --noinput
-gunicorn scaw.wsgi:application --bind 0.0.0.0:8000
+# Запускаем celery worker в фоне
+celery -A scaw worker -l INFO &
+WORKER_PID=$! # Сохраняем PID этого процесса
+
+# Запускаем celery beat в фоне
+celery -A scaw beat -l INFO &
+BEAT_PID=$! # Сохраняем PID этого процесса
+
+# python manage.py collectstatic --noinput
+# python manage.py collectstatic --noinput --clear
+python manage.py runserver 0.0.0.0:8000
+# gunicorn scaw.wsgi:application --bind 0.0.0.0:8000
+
+
+# Когда контейнер завершается, убиваем оба процесса по их PID
+trap "kill $WORKER_PID $BEAT_PID" EXIT

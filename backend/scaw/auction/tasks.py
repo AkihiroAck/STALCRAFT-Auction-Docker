@@ -10,6 +10,7 @@ from django.utils.dateparse import parse_datetime
 from datetime import timedelta
 from django.utils import timezone
 from django.db import transaction
+from auction.logger import log
 
 
 
@@ -64,16 +65,16 @@ def get_history(item, additional: str = 'false', limit: str = '20', offset: str 
             response_json = response.json()
 
             if response.status_code != 200:  # Если не успешный статус ответа
-                print(f'ERROR: get_history (response.status_code != 200) {item.name} [{item.item_id}]: {response_json}')
+                log(f'ERROR: (response.status_code != 200) {item.name} [{item.item_id}]: {response_json}', save=True)
                 time.sleep(5)
                 continue  # Повторить запрос
 
             return response_json
         except requests.exceptions.RequestException as e:
-            print(f'ERROR: get_history (requests) {item.name} [{item.item_id}]: {str(e)}')
+            log(f'ERROR: (requests) {item.name} [{item.item_id}]: {str(e)}', save=True)
             time.sleep(20)
         except Exception as e:
-            print(f'ERROR: get_history {item.name} [{item.item_id}]: {str(e)}')
+            log(f'ERROR: {item.name} [{item.item_id}]: {str(e)}', save=True)
             time.sleep(20)
 
 
@@ -105,16 +106,18 @@ def start_get_history():
                     
                     if 'total' in lots and lots.get('total') != 0:
                         save_sale_history(item, lots.get('prices'), total_items, count)
+                    
+                    # time.sleep(0.8)  # Задержка между запросами к API (по умолчанию 0.8)
 
                     break
                 except Exception as e:
-                    print(f"ERROR: start_get_history {item.name} [{item.item_id}]: {str(e)}")
+                    log(f"ERROR: {item.name} [{item.item_id}]: {str(e)}", save=True)
                     time.sleep(20)
     
     # Перезапускаем всю задачу через 1 секунд
     start_get_history.apply_async(countdown=1)
     
-    return f"FINISH: start_get_history Задача выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
+    return f"FINISH: Задача выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
 
 
 def save_sale_history(item, lots, total_items, current_count):
@@ -180,28 +183,29 @@ def save_sale_history(item, lots, total_items, current_count):
                 with transaction.atomic():
                     created_count = len(SaleHistory.objects.bulk_create(
                         sale_records_to_create,
+                        # ignore_conflicts=True  # На случай, если дубликаты появились параллельно, сохранить все кроме дубликатов без вызова ошибки
                     ))
-                    print(f'INFO: [{current_count}/{total_items}] save_sale_history bulk_create СОХРАНЕНО {created_count} записей для {item.name} [{item.item_id}]')
+                    log(f'INFO: [{current_count}/{total_items}] СОХРАНЕНО {created_count} записей для {item.name} [{item.item_id}]', save=True)
                 
-            break  # Выходим из цикла при успешном выполнении
+            break  # Выходим из цикла, если успешно обработали лот
 
         except Exception as e:
-            print(f'ERROR: [{current_count}/{total_items}] save_sale_history {item.name} [{item.item_id}]: {str(e)}')
+            log(f'ERROR: [{current_count}/{total_items}] {item.name} [{item.item_id}]: {str(e)}', save=True)
             time.sleep(20)
 
 
-# @shared_task
-# def delete_old_sales():
-#     """Удаляет старые записи о продажах, старше 2 лет."""
+@shared_task
+def delete_old_sales():
+    """Удаляет старые записи о продажах, старше 2 лет."""
 
-#     time_start = time.time()
-#     older_limit = timezone.now() - timedelta(days=365 * 2)
+    time_start = time.time()
+    older_limit = timezone.now() - timedelta(days=365 * 2)
     
-#     with transaction.atomic():
-#         old_sales = SaleHistory.objects.filter(time__lt=older_limit)
-#         deleted_count, _ = old_sales.delete()
-#         print(f"INFO: delete_old_sales Удалено {deleted_count} старых записей о продажах.")
-#         return f"FINISH: delete_old_sales Задача удаления старых данных по истории аукциона выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
+    with transaction.atomic():
+        old_sales = SaleHistory.objects.filter(time__lt=older_limit)
+        deleted_count, _ = old_sales.delete()
+        log(f"INFO: Удалено {deleted_count} старых записей о продажах.", save=True)
+        return f"FINISH: Задача удаления старых данных по истории аукциона выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
 
 
 @shared_task
@@ -215,7 +219,7 @@ def sync_github_items_daily():
         response = requests.get(url)
 
         if response.status_code != 200:
-            print(f"ERROR: sync_github_items_daily Ошибка запроса: {response.status_code}")
+            log(f"ERROR: Ошибка запроса: {response.status_code}", save=True)
             return False
 
         data = response.json()
@@ -246,16 +250,16 @@ def sync_github_items_daily():
                 })
 
             except Exception as e:
-                print(f"ERROR: sync_github_items_daily Ошибка обработки предмета {item_info}: {e}")
+                log(f"ERROR: Ошибка обработки предмета {item_info}: {e}", save=True)
                 continue
 
         # Массовая обработка данных
         create_or_update_items(processed_data)
 
-        return f"FINISH: sync_github_items_daily Задача выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
+        return f"FINISH: Задача выполнена: {str(timedelta(seconds=time.time() - time_start))}\n"
 
     except Exception as e:
-        print(f"ERROR: sync_github_items_daily Ошибка синхронизации: {e}")
+        log(f"ERROR: Ошибка синхронизации: {e}", save=True)
         return False
 
 
@@ -289,7 +293,7 @@ def create_or_update_items(items_data):
                     category=data['category'],
                     color=data['color']
                 ))
-                print(f"INFO: create_or_update_items ДОБАВЛЕН: {data['name']} ({item_id})")
+                log(f"INFO: ДОБАВЛЕН: {data['name']} ({item_id})", save=True)
             else:
                 # Существующий предмет - проверяем изменения
                 existing_item = existing_items[item_id]
@@ -306,7 +310,7 @@ def create_or_update_items(items_data):
                     existing_item.category = data['category']
                     existing_item.color = data['color']
                     to_update.append(existing_item)
-                    print(f"INFO: create_or_update_items ОБНОВЛЕН: {data['name']} ({item_id})")
+                    log(f"INFO: ОБНОВЛЕН: {data['name']} ({item_id})", save=True)
 
         # Выполняем массовые операции
         if to_create:
@@ -314,4 +318,4 @@ def create_or_update_items(items_data):
         if to_update:
             Item.objects.bulk_update(to_update, ['name', 'name_key', 'category', 'color'])
 
-        print(f"INFO: create_or_update_items needs_update СОЗДАНО: {len(to_create)}, ОБНОВЛЕНО: {len(to_update)}")
+        log(f"INFO: СОЗДАНО: {len(to_create)}, ОБНОВЛЕНО: {len(to_update)}", save=True)
