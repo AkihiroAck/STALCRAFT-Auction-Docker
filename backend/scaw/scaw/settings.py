@@ -34,7 +34,8 @@ DEBUG = os.getenv("DEBUG")
 ALLOWED_HOSTS = ['*']
 
 
-# Application definition
+# --------------------------------------- APPLICATION DEFINITION ---------------------------------------
+# ------------------------------------------------------------------------------------------------------
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,11 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'auction',
+    'auction',  # Приложение аукциона
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Для обслуживания статических файлов
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,7 +79,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'scaw.wsgi.application'
 
 
-# Database
+# ---------------------------------------------- DATABASE ----------------------------------------------
+# ------------------------------------------------------------------------------------------------------
 
 POSTGRES_DATABASE_NAME = os.getenv('POSTGRES_DATABASE_NAME')
 POSTGRES_USERNAME = os.getenv('POSTGRES_USERNAME')
@@ -101,7 +103,9 @@ DATABASES = {
 }
 
 
-# Password validation
+# ---------------------------------------- PASSWORD VALIDATION -----------------------------------------
+# ------------------------------------------------------------------------------------------------------
+
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -127,8 +131,8 @@ REDIS_HOST = os.getenv('REDIS_HOST')
 REDIS_PORT = os.getenv('REDIS_PORT')
 REDIS_DB = os.getenv('REDIS_DB')
 
-# Используем Django в качестве брокера
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+# Настройка брокера и бэкенда для Celery
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"  # Брокер будет пользоваться локальным Redis
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL  # Хранить результаты в том же Redis
 CELERY_ACCEPT_CONTENT = ['application/json']  # Допустимый формат данных
 CELERY_TASK_SERIALIZER = 'json'  # Метод сериализации задач
@@ -138,10 +142,9 @@ CELERY_RESULT_SERIALIZER = 'json'  # Метод сериализации рез�
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
+# ---------------------------------------- INTERNATIONALIZATION ----------------------------------------
 # ------------------------------------------------------------------------------------------------------
 
-
-# Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
@@ -153,21 +156,25 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# ------------------------------- STATIC FILES (CSS, JavaScript, Images) -------------------------------
+# ------------------------------------------------------------------------------------------------------
+
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Использование WhiteNoise для обслуживания статических файлов
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Каталог для сбора статических файлов
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / 'static',  # Дополнительные каталоги для project-level статических файлов
 ]
 
 
-# Default primary key field type
+# ----------------------------------- DEFAULT PRIMARY KEY FIELD TYPE -----------------------------------
+# ------------------------------------------------------------------------------------------------------
+
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
